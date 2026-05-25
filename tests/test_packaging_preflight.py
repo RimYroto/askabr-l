@@ -50,10 +50,12 @@ def test_resolve_python314_on_current_interpreter():
 
 def test_spec_declares_required_bundles():
     spec_text = (PACKAGING / "askabr_l_gui.spec").read_text(encoding="utf-8")
-    assert "models/tomato" in spec_text
-    assert "models/pear" in spec_text
-    assert "rthook_ssl.py" in spec_text
+    assert "rthook_runtime.py" in spec_text
+    assert "pyinstaller_hooks_contrib" in spec_text
+    assert "get_hook_dirs" in spec_text
     assert "upx=False" in spec_text
+    assert "_collect_model_datas" in spec_text
+    assert "Warning: PyInstaller hook collection skipped" not in spec_text
 
 
 def test_windows_build_entrypoints_exist():
@@ -63,5 +65,28 @@ def test_windows_build_entrypoints_exist():
         "build_windows.ps1",
         "build_windows.bat",
         "resolve_python314.py",
+        "constraints-build.txt",
+        "rthook_runtime.py",
     ):
         assert (PACKAGING / name).is_file()
+
+
+def test_staging_populates_required_files(tmp_path):
+    wp = _load_module("windows_paths", PACKAGING / "windows_paths.py")
+    staging = tmp_path / "staging"
+    wp.populate_staging(ROOT, staging)
+    assert (staging / "pyproject.toml").is_file()
+    assert (staging / "askabr").is_dir()
+    assert (staging / "gui").is_dir()
+    assert (staging / "packaging" / "askabr_l_gui.spec").is_file()
+    for variant in ("tomato", "pear"):
+        variant_dir = staging / "models" / variant
+        if not (ROOT / "models" / variant).is_dir():
+            continue
+        has_src = (
+            (ROOT / "models" / variant / "model_v1.0.0.pt").is_file()
+            or (ROOT / "models" / variant / "best.pt").is_file()
+        )
+        if not has_src:
+            continue
+        assert list(variant_dir.glob("*.pt")), f"no checkpoint in staging for {variant}"

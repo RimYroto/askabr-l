@@ -5,8 +5,11 @@ from __future__ import annotations
 
 import hashlib
 import os
+import shutil
 import sys
 from pathlib import Path
+
+REQUIRED_VARIANTS = ("tomato", "pear")
 
 
 def has_non_ascii(path: Path | str) -> bool:
@@ -50,20 +53,72 @@ def ascii_build_cache_root(project_root: Path) -> Path:
     return Path(program_data) / "ASKABR-L" / digest
 
 
+def frozen_torch_cache_dir() -> Path:
+    """ASCII-safe torch hub cache for frozen Windows builds."""
+    program_data = os.environ.get("ProgramData", r"C:\ProgramData")
+    cache = Path(program_data) / "ASKABR-L" / "torch"
+    cache.mkdir(parents=True, exist_ok=True)
+    return cache
+
+
+def _resolve_checkpoint(variant_dir: Path) -> Path | None:
+    for name in ("model_v1.0.0.pt", "best.pt"):
+        path = variant_dir / name
+        if path.is_file():
+            return path
+    return None
+
+
+def populate_staging(project_root: Path, staging_root: Path) -> None:
+    """Копирует исходники и модели в ASCII staging для pip install ."""
+    if staging_root.exists():
+        shutil.rmtree(staging_root)
+    staging_root.mkdir(parents=True, exist_ok=True)
+
+    for package in ("askabr", "gui", "packaging"):
+        src = project_root / package
+        if src.is_dir():
+            shutil.copytree(src, staging_root / package)
+
+    shutil.copy2(project_root / "pyproject.toml", staging_root / "pyproject.toml")
+
+    docs_src = project_root / "docs" / "INSTRUKCIYA.txt"
+    if docs_src.is_file():
+        (staging_root / "docs").mkdir(parents=True, exist_ok=True)
+        shutil.copy2(docs_src, staging_root / "docs" / "INSTRUKCIYA.txt")
+
+    for variant in REQUIRED_VARIANTS:
+        src_dir = project_root / "models" / variant
+        ckpt = _resolve_checkpoint(src_dir)
+        if ckpt is None:
+            continue
+        dest_dir = staging_root / "models" / variant
+        dest_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(ckpt, dest_dir / ckpt.name)
+        for meta in ("labels.json", "config_resolved.yaml"):
+            meta_src = src_dir / meta
+            if meta_src.is_file():
+                shutil.copy2(meta_src, dest_dir / meta)
+
+
 def prepare_build_paths(project_root: Path) -> dict[str, Path]:
     """Готовит ASCII-пути для сборки; dist остаётся в проекте."""
     configure_unicode_env()
     project_root = project_root.resolve()
 
     cache = ascii_build_cache_root(project_root)
+    staging = cache / "staging"
     paths = {
         "project": project_root,
         "cache": cache,
+        "staging": staging,
         "venv": cache / "venv-build",
         "temp": cache / "temp",
         "pyi_work": cache / "pyi-work",
         "pyi_dist": cache / "pyi-dist",
         "dist": project_root / "dist",
+        "build_log": project_root / "dist" / "build.log",
+        "smoke_log": project_root / "dist" / "smoke.log",
     }
 
     for key in ("cache", "venv", "temp", "pyi_work", "pyi_dist", "dist"):
@@ -73,21 +128,19 @@ def prepare_build_paths(project_root: Path) -> dict[str, Path]:
     os.environ["TMP"] = str(paths["temp"])
     os.environ["PIP_CACHE_DIR"] = str(cache / "pip-cache")
 
+    populate_staging(project_root, staging)
+    paths["build_cwd"] = staging
+
     if has_non_ascii(project_root):
-        short = windows_short_path(project_root)
         print(
             "Note: project path contains non-ASCII characters "
             f"({project_root})."
         )
-        if short and not has_non_ascii(short):
-            print(f"Using short path where possible: {short}")
-            paths["project_short"] = short
-        else:
-            print(
-                "Build caches were moved to ASCII path:\n"
-                f"  {cache}\n"
-                "Final ASKABR-L.exe will be copied to dist\\ in your project."
-            )
+        print(
+            "Using ASCII staging for pip/PyInstaller:\n"
+            f"  {staging}\n"
+            "Final ASKABR-L.exe will be copied to dist\\ in your project."
+        )
 
     return paths
 
@@ -97,7 +150,5 @@ def copy_built_exe(pyi_dist: Path, target: Path) -> Path:
     if not source.is_file():
         raise FileNotFoundError(f"PyInstaller did not create {source}")
     target.parent.mkdir(parents=True, exist_ok=True)
-    import shutil
-
     shutil.copy2(source, target)
     return target

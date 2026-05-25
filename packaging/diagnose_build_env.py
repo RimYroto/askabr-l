@@ -24,29 +24,32 @@ def main() -> None:
         print("Run this script on Windows.")
         raise SystemExit(0)
 
-    mod = _load(ROOT / "packaging" / "windows_paths.py", "windows_paths")
+    wp = _load(ROOT / "packaging" / "windows_paths.py", "windows_paths")
 
     print("=== ASKABR-L build environment ===")
     print(f"Python: {sys.version}")
     print(f"Executable: {sys.executable}")
     print(f"Project: {ROOT}")
-    print(f"Non-ASCII in project path: {mod.has_non_ascii(ROOT)}")
+    print(f"Non-ASCII in project path: {wp.has_non_ascii(ROOT)}")
     print(f"USERPROFILE: {os.environ.get('USERPROFILE', '')}")
-    print(f"Non-ASCII in USERPROFILE: {mod.has_non_ascii(os.environ.get('USERPROFILE', ''))}")
+    print(f"Non-ASCII in USERPROFILE: {wp.has_non_ascii(os.environ.get('USERPROFILE', ''))}")
     print(f"TEMP: {os.environ.get('TEMP', '')}")
-    print(f"TMP: {os.environ.get('TMP', '')}")
 
-    paths = mod.prepare_build_paths(ROOT)
-    print(f"ASCII build cache: {paths['cache']}")
-    print(f"Venv will be created at: {paths['venv']}")
-    print(f"PyInstaller work: {paths['pyi_work']}")
-    print(f"Final exe target: {paths['dist'] / 'ASKABR-L.exe'}")
+    cache = wp.ascii_build_cache_root(ROOT)
+    print(f"ASCII build cache: {cache}")
+    print(f"Staging will be: {cache / 'staging'}")
+    print(f"Final exe: {ROOT / 'dist' / 'ASKABR-L.exe'}")
+    print(f"Build log: {ROOT / 'dist' / 'build.log'}")
 
     resolve = _load(ROOT / "packaging" / "resolve_python314.py", "resolve_python314")
     py314 = resolve.resolve_python314_executable()
     print(f"Python 3.14 resolved: {py314 or 'NOT FOUND'}")
     if not py314:
         raise SystemExit(1)
+
+    preflight = _load(ROOT / "packaging" / "preflight.py", "preflight")
+    preflight.assert_release_models(ROOT)
+    print("Model weights: OK")
     print("Diagnostics OK.")
 
 

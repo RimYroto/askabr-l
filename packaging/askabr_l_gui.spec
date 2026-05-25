@@ -1,9 +1,10 @@
 # -*- mode: python ; coding: utf-8 -*-
-"""PyInstaller spec для автономной сборки АСКАБР-Л (Windows, CPU)."""
+"""PyInstaller spec для автономной сборки АСКАБР-Л (Windows, CPU, onefile)."""
 
 from __future__ import annotations
 
 import importlib.util
+import os
 import sys
 from pathlib import Path
 
@@ -17,14 +18,45 @@ assert _spec.loader is not None
 _spec.loader.exec_module(_preflight)
 _preflight.assert_release_models(ROOT)
 
+
+def _collect_model_datas() -> list[tuple[str, str]]:
+    entries: list[tuple[str, str]] = []
+    for variant in ("tomato", "pear"):
+        variant_dir = ROOT / "models" / variant
+        if not variant_dir.is_dir():
+            continue
+        dest = f"models/{variant}"
+        for ckpt_name in ("model_v1.0.0.pt", "best.pt"):
+            ckpt = variant_dir / ckpt_name
+            if ckpt.is_file():
+                entries.append((str(ckpt), dest))
+                break
+        for meta in ("labels.json", "config_resolved.yaml"):
+            meta_path = variant_dir / meta
+            if meta_path.is_file():
+                entries.append((str(meta_path), dest))
+    return entries
+
+
+def _merge_collect(package: str, datas: list, binaries: list, hiddenimports: list) -> None:
+    from PyInstaller.utils.hooks import collect_all
+
+    pkg_datas, pkg_binaries, pkg_hidden = collect_all(package)
+    if not pkg_datas and not pkg_binaries and package in ("torch", "PyQt6"):
+        raise RuntimeError(f"collect_all({package!r}) returned no binaries or datas")
+    datas += pkg_datas
+    binaries += pkg_binaries
+    hiddenimports += pkg_hidden
+
+
 _binaries: list = []
 _datas = [
-    (str(ROOT / "models" / "tomato"), "models/tomato"),
-    (str(ROOT / "models" / "pear"), "models/pear"),
     (str(ROOT / "docs" / "INSTRUKCIYA.txt"), "docs"),
     (str(ROOT / "gui" / "class_labels_ru.json"), "gui"),
     (str(ROOT / "gui" / "plant_variants.json"), "gui"),
 ]
+_datas += _collect_model_datas()
+
 _hiddenimports = [
     "torch",
     "torchvision",
@@ -58,27 +90,22 @@ _hiddenimports = [
     "gui.report_export",
 ]
 
-try:
-    from PyInstaller.utils.hooks import collect_all, collect_data_files, collect_dynamic_libs
+from PyInstaller.utils.hooks import collect_data_files, collect_dynamic_libs
 
-    for _pkg in ("certifi",):
-        _d, _b, _h = collect_all(_pkg)
-        _datas += _d
-        _binaries += _b
-        _hiddenimports += _h
+import pyinstaller_hooks_contrib
 
-    _binaries += collect_dynamic_libs("torch")
-    _binaries += collect_dynamic_libs("PyQt6")
+_hookspath = pyinstaller_hooks_contrib.get_hook_dirs()
 
-    _qt_datas, _qt_binaries, _qt_hiddenimports = collect_all("PyQt6")
-    _datas += _qt_datas
-    _binaries += _qt_binaries
-    _hiddenimports += _qt_hiddenimports
+_merge_collect("certifi", _datas, _binaries, _hiddenimports)
+_binaries += collect_dynamic_libs("torch")
+_binaries += collect_dynamic_libs("PyQt6")
+_merge_collect("PyQt6", _datas, _binaries, _hiddenimports)
+_merge_collect("torch", _datas, _binaries, _hiddenimports)
 
-    for _pkg in ("yaml",):
-        _datas += collect_data_files(_pkg)
-except Exception as exc:  # pragma: no cover - only when PyInstaller missing locally
-    print(f"Warning: PyInstaller hook collection skipped: {exc}", file=sys.stderr)
+for _pkg in ("yaml",):
+    _datas += collect_data_files(_pkg)
+
+_console = bool(os.environ.get("ASKABR_BUILD_DEBUG"))
 
 a = Analysis(
     [str(ROOT / "gui" / "run_app.py")],
@@ -86,9 +113,9 @@ a = Analysis(
     binaries=_binaries,
     datas=_datas,
     hiddenimports=_hiddenimports,
-    hookspath=[],
+    hookspath=_hookspath,
     hooksconfig={},
-    runtime_hooks=[str(ROOT / "packaging" / "rthook_ssl.py")],
+    runtime_hooks=[str(ROOT / "packaging" / "rthook_runtime.py")],
     excludes=[
         "gradio",
         "kagglehub",
@@ -121,7 +148,7 @@ exe = EXE(
     upx=False,
     upx_exclude=[],
     runtime_tmpdir=None,
-    console=False,
+    console=_console,
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,

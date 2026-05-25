@@ -245,17 +245,30 @@
     py -3.14 packaging\build_windows.py
 
   Скрипт автоматически:
-  - создаст временное окружение .venv-build;
-  - установит PyTorch (CPU), PyInstaller и зависимости проекта;
-  - соберёт один файл dist\ASKABR-L.exe.
+  - скопирует проект в ASCII-каталог C:\ProgramData\ASKABR-L\... (важно при
+    кириллице в имени пользователя Windows);
+  - установит PyTorch (CPU), PyInstaller и зависимости;
+  - соберёт один файл dist\ASKABR-L.exe;
+  - выполнит smoke-тест (проверка моделей без GUI).
 
   Сборка занимает 15-40 минут и требует 3-5 ГБ свободного места.
+
+  Диагностика перед сборкой:
+
+    py -3.14 packaging\diagnose_build_env.py
+
+  Если exe не запускается — пересоберите с консолью для отладки:
+
+    py -3.14 packaging\build_windows.py --debug
 
 5.3. Результат
 
   Файл                  Описание
   --------------------  ------------------------------------------
   dist\ASKABR-L.exe     Готовая программа (около 400-800 МБ)
+  dist\build.log        Полный лог сборки
+  dist\smoke.log        Лог smoke-теста после сборки
+  dist\pyinstaller.log  Лог PyInstaller
 
   Скопируйте ASKABR-L.exe на целевой компьютер — больше ничего устанавливать
   не нужно. Рекомендуется положить рядом файл INSTRUKCIYA.txt.
@@ -414,13 +427,17 @@
                                         модели в models/, затем
                                         packaging\build_windows.cmd
 
-  «Системе не удается найти указанный    Обновите проект и пересоберите.
-  путь» / exit code 3 при сборке        Часто из-за кириллицы в имени
-                                        пользователя Windows (C:\Users\Имя\).
-                                        Сборка переносит venv и TEMP в
-                                        C:\ProgramData\ASKABR-L\...
+  «Системе не удается найти указанный    Обновите проект и пересоберите:
+  путь» / exit code 3 при сборке        packaging\build_windows.cmd
+                                        (кириллица в C:\Users\... обходится
+                                        через C:\ProgramData\ASKABR-L\).
                                         Диагностика: py -3.14 packaging\
                                         diagnose_build_env.py
+
+  Сборка OK, но exe не открывается      Пересоберите: py -3.14 packaging\
+                                        build_windows.py --debug
+                                        Смотрите dist\build.log и dist\
+                                        smoke.log
 
 ================================================================================
 10. КРАТКАЯ ШПАРГАЛКА

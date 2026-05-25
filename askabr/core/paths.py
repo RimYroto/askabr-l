@@ -21,8 +21,12 @@ def project_root() -> Path:
 def torch_cache_dir() -> Path:
     """Записываемый кэш весов torch hub."""
     if getattr(sys, "frozen", False):
-        base = os.environ.get("LOCALAPPDATA") or os.environ.get("XDG_CACHE_HOME") or str(Path.home())
-        cache = Path(base) / "ASKABR-L" / "torch"
+        if sys.platform == "win32":
+            program_data = os.environ.get("ProgramData", r"C:\ProgramData")
+            cache = Path(program_data) / "ASKABR-L" / "torch"
+        else:
+            base = os.environ.get("LOCALAPPDATA") or os.environ.get("XDG_CACHE_HOME") or str(Path.home())
+            cache = Path(base) / "ASKABR-L" / "torch"
     else:
         cache = project_root() / ".cache" / "torch"
     cache.mkdir(parents=True, exist_ok=True)
