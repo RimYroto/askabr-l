@@ -42,7 +42,7 @@ pip install -r requirements-dev.txt    # как uv sync
 
 ```bash
 # Установите uv: https://docs.astral.sh/uv/getting-started/installation/
-cd plant-disease-resistance
+cd askabr-l
 uv sync
 uv run askabr-gui
 ```

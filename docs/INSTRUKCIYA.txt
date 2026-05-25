@@ -85,7 +85,7 @@
 ================================================================================
 
 Этот способ нужен, если у вас есть папка с исходным кодом проекта
-(например, plant-disease-resistance) и вы хотите запускать программу через Python.
+(например, askabr-l) и вы хотите запускать программу через Python.
 
 2.1. Что понадобится
 
@@ -122,7 +122,7 @@
   1. Откройте PowerShell или командную строку.
   2. Перейдите в папку проекта:
 
-    cd C:\путь\к\plant-disease-resistance
+    cd C:\путь\к\askabr-l
 
   3. Установите зависимости:
 
@@ -145,7 +145,7 @@
 
 2.6. Альтернатива без uv (только pip)
 
-    cd C:\путь\к\plant-disease-resistance
+    cd C:\путь\к\askabr-l
     python -m venv .venv
     .venv\Scripts\activate
     pip install -U pip
@@ -177,7 +177,7 @@
 
 3.3. Установка и запуск
 
-    cd ~/путь/к/plant-disease-resistance
+    cd ~/путь/к/askabr-l
     uv sync
     uv run askabr-gui
 
@@ -212,7 +212,7 @@
 
 4.4. Установка и запуск
 
-    cd ~/путь/к/plant-disease-resistance
+    cd ~/путь/к/askabr-l
     uv sync
     uv run askabr-gui
 
@@ -235,7 +235,7 @@
   1. Откройте PowerShell.
   2. Перейдите в папку проекта:
 
-    cd C:\путь\к\plant-disease-resistance
+    cd C:\путь\к\askabr-l
 
   3. Запустите скрипт сборки:
 

@@ -1,4 +1,4 @@
-# Пути относительно корня проекта plant_disease_resistance/
+# Пути относительно корня проекта askabr-l/
 data_root: "data/plantvillage"
 artifacts_dir: "artifacts"
 train_ratio: 0.85
