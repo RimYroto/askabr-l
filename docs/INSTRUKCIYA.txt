@@ -91,13 +91,13 @@
 
   - Windows 10/11 (64-bit)
   - Папка проекта целиком (вместе с подпапкой models/, где лежат файлы моделей)
-  - Python 3.10 или новее
+  - Python 3.10–3.14
   - Менеджер пакетов uv (рекомендуется) или pip
 
 2.2. Установка Python
 
   1. Откройте https://www.python.org/downloads/
-  2. Скачайте установщик Python 3.10+ для Windows.
+  2. Скачайте установщик Python 3.10–3.14 для Windows.
   3. При установке обязательно отметьте галочку «Add python.exe to PATH».
   4. Завершите установку.
 
@@ -226,7 +226,7 @@
 5.1. Что понадобится
 
   - Windows 10/11 x64
-  - Python 3.10+ (https://www.python.org/downloads/), с галочкой Add to PATH
+  - Python 3.10–3.14 (https://www.python.org/downloads/), с галочкой Add to PATH
   - Папка проекта с моделями в models/tomato/ и models/pear/
     (файлы best.pt или model_v1.0.0.pt)
 
@@ -396,7 +396,8 @@
 
   GUI не открывается на Linux           Установите библиотеки Qt (раздел 4.2)
 
-  Ошибка при сборке .exe                Python 3.10+, модели в models/
+  Ошибка при сборке .exe                Python 3.10–3.14, модели в models/,
+                                        затем packaging\build_windows.ps1
 
 ================================================================================
 10. КРАТКАЯ ШПАРГАЛКА
