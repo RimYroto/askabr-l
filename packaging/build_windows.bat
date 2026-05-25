@@ -6,10 +6,13 @@ call packaging\build_windows.cmd %*
 set "ERR=%ERRORLEVEL%"
 if not "%ERR%"=="0" (
   echo.
-  echo Build failed with exit code %ERR%.
+  echo Build FAILED with exit code %ERR%.
+  if exist "dist\build.log" echo See dist\build.log
   pause
   exit /b %ERR%
 )
 if /i "%~1"=="--no-pause" exit /b 0
+echo.
+echo Build succeeded: dist\ASKABR-L.exe
 pause
 exit /b 0

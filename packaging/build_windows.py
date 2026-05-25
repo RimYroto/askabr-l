@@ -29,13 +29,19 @@ class _Tee:
 
     def write(self, data: str) -> int:
         for stream in self._streams:
-            stream.write(data)
-            stream.flush()
+            try:
+                stream.write(data)
+                stream.flush()
+            except ValueError:
+                pass
         return len(data)
 
     def flush(self) -> None:
         for stream in self._streams:
-            stream.flush()
+            try:
+                stream.flush()
+            except ValueError:
+                pass
 
 
 def _reexec_if_needed() -> Path:
@@ -56,17 +62,15 @@ def _reexec_if_needed() -> Path:
     os.execv(str(target_path), [str(target_path), *sys.argv])
 
 
-def _run(cmd: list[str], *, cwd: Path, windows_paths, log_file) -> None:
+def _run(cmd: list[str], *, cwd: Path, windows_paths) -> None:
     line = "+ " + " ".join(cmd) + "\n"
-    log_file.write(line)
-    log_file.flush()
     print(line, end="")
-    kwargs = {"cwd": cwd, "check": True, "stdout": log_file, "stderr": subprocess.STDOUT}
+    kwargs = {"cwd": cwd, "check": True, "stdout": sys.stdout, "stderr": subprocess.STDOUT}
     kwargs.update(windows_paths.subprocess_text_kwargs())
     subprocess.run(cmd, **kwargs)
 
 
-def _run_smoke(exe: Path, smoke_log: Path, *, debug: bool) -> None:
+def _run_smoke(exe: Path, smoke_log: Path) -> None:
     cmd = [str(exe), "--smoke-test"]
     print(f"Running smoke test: {' '.join(cmd)}")
     with smoke_log.open("w", encoding="utf-8") as log:
@@ -90,6 +94,103 @@ def _run_smoke(exe: Path, smoke_log: Path, *, debug: bool) -> None:
     if result.returncode != 0:
         raise SystemExit(f"Smoke test failed (exit {result.returncode}). See {smoke_log}")
     print("Smoke test passed.")
+
+
+def _build(paths: dict, windows_paths, python: Path, preflight, *, skip_smoke: bool) -> None:
+    build_cwd = paths["build_cwd"]
+    dist_exe = paths["dist"] / "ASKABR-L.exe"
+    constraints = build_cwd / "packaging" / "constraints-build.txt"
+
+    print("=== ASKABR-L Windows build (Python 3.14, onefile) ===")
+    preflight.assert_python_version(build=True)
+    preflight.assert_release_models(ROOT)
+
+    print(f"Project: {paths['project']}")
+    print(f"Staging (ASCII): {build_cwd}")
+    print(f"Build cache: {paths['cache']}")
+    print(f"Build log: {paths['dist_build_log']}")
+
+    venv_dir = paths["venv"]
+    if venv_dir.exists():
+        print(f"Removing previous build venv: {venv_dir}")
+        import shutil
+
+        shutil.rmtree(venv_dir)
+    venv_dir.mkdir(parents=True, exist_ok=True)
+
+    pip = venv_dir / "Scripts" / "pip.exe"
+    pyinstaller = venv_dir / "Scripts" / "pyinstaller.exe"
+
+    _run([str(python), "-m", "venv", str(venv_dir)], cwd=build_cwd, windows_paths=windows_paths)
+    _run([str(pip), "install", "-U", "pip", "wheel", "setuptools"], cwd=build_cwd, windows_paths=windows_paths)
+
+    print("Installing PyTorch (CPU) for cp314...")
+    _run(
+        [
+            str(pip),
+            "install",
+            "torch",
+            "torchvision",
+            "--index-url",
+            "https://download.pytorch.org/whl/cpu",
+        ],
+        cwd=build_cwd,
+        windows_paths=windows_paths,
+    )
+
+    print("Installing build constraints...")
+    _run(
+        [str(pip), "install", "-r", str(constraints)],
+        cwd=build_cwd,
+        windows_paths=windows_paths,
+    )
+
+    print("Installing project (non-editable from staging)...")
+    _run([str(pip), "install", "."], cwd=build_cwd, windows_paths=windows_paths)
+
+    print("Running PyInstaller...")
+    with paths["pyinstaller_log"].open("w", encoding="utf-8") as pyi_log:
+        pyi_log.write("PyInstaller output\n")
+        pyi_log.flush()
+        kwargs = {
+            "cwd": build_cwd,
+            "check": True,
+            "stdout": pyi_log,
+            "stderr": subprocess.STDOUT,
+        }
+        kwargs.update(windows_paths.subprocess_text_kwargs())
+        subprocess.run(
+            [
+                str(pyinstaller),
+                "packaging/askabr_l_gui.spec",
+                "--noconfirm",
+                "--clean",
+                "--distpath",
+                str(paths["pyi_dist"]),
+                "--workpath",
+                str(paths["pyi_work"]),
+            ],
+            **kwargs,
+        )
+
+    windows_paths.copy_built_exe(paths["pyi_dist"], dist_exe)
+
+    size_mb = round(dist_exe.stat().st_size / (1024 * 1024), 1)
+    if size_mb < MIN_EXE_MB:
+        raise SystemExit(
+            f"ASKABR-L.exe is only {size_mb} MB — expected at least {MIN_EXE_MB} MB. "
+            f"See {paths['dist_build_log']}"
+        )
+
+    if not skip_smoke:
+        _run_smoke(dist_exe, paths["smoke_log"])
+
+    print()
+    print(f"Done. Output: {dist_exe.resolve()} ({size_mb} MB)")
+    print(f"Build log: {paths['dist_build_log'].resolve()}")
+    if not skip_smoke:
+        print(f"Smoke log: {paths['dist_smoke_log'].resolve()}")
+    print("Copy docs\\INSTRUKCIYA.txt next to the exe for end users.")
 
 
 def main() -> None:
@@ -121,103 +222,30 @@ def main() -> None:
         os.environ.pop("ASKABR_BUILD_DEBUG", None)
 
     paths = windows_paths.prepare_build_paths(ROOT)
-    build_cwd = paths["build_cwd"]
-    dist_exe = paths["dist"] / "ASKABR-L.exe"
-    constraints = ROOT / "packaging" / "constraints-build.txt"
+    original_stdout = sys.stdout
+    exit_code = 1
 
-    with paths["build_log"].open("w", encoding="utf-8") as log_file:
-        sys.stdout = _Tee(sys.__stdout__, log_file)  # type: ignore[assignment]
+    try:
+        with paths["build_log"].open("w", encoding="utf-8") as log_file:
+            sys.stdout = _Tee(original_stdout, log_file)  # type: ignore[assignment]
+            try:
+                _build(paths, windows_paths, python, preflight, skip_smoke=args.skip_smoke)
+                exit_code = 0
+            except subprocess.CalledProcessError as exc:
+                print(f"\nBUILD FAILED: command exited with code {exc.returncode}")
+                print(f"Command: {' '.join(exc.cmd)}")
+                raise SystemExit(1) from exc
+            except SystemExit as exc:
+                if exc.code not in (None, 0):
+                    print(f"\nBUILD FAILED (exit {exc.code})")
+                raise
+    finally:
+        sys.stdout = original_stdout
+        windows_paths.publish_build_logs(paths)
+        if exit_code != 0:
+            print(f"\nBuild failed. See log: {paths['dist_build_log']}", file=original_stdout)
 
-        print("=== ASKABR-L Windows build (Python 3.14, onefile) ===")
-        preflight.assert_python_version(build=True)
-        preflight.assert_release_models(ROOT)
-
-        print(f"Project: {paths['project']}")
-        print(f"Staging (ASCII): {build_cwd}")
-        print(f"Build cache: {paths['cache']}")
-        print(f"Build log: {paths['build_log']}")
-
-        venv_dir = paths["venv"]
-        if venv_dir.exists():
-            print(f"Removing previous build venv: {venv_dir}")
-            import shutil
-
-            shutil.rmtree(venv_dir)
-        venv_dir.mkdir(parents=True, exist_ok=True)
-
-        pip = venv_dir / "Scripts" / "pip.exe"
-        pyinstaller = venv_dir / "Scripts" / "pyinstaller.exe"
-
-        _run([str(python), "-m", "venv", str(venv_dir)], cwd=build_cwd, windows_paths=windows_paths, log_file=log_file)
-        _run([str(pip), "install", "-U", "pip", "wheel", "setuptools"], cwd=build_cwd, windows_paths=windows_paths, log_file=log_file)
-
-        print("Installing PyTorch (CPU) for cp314...")
-        _run(
-            [
-                str(pip),
-                "install",
-                "torch",
-                "torchvision",
-                "--index-url",
-                "https://download.pytorch.org/whl/cpu",
-            ],
-            cwd=build_cwd,
-            windows_paths=windows_paths,
-            log_file=log_file,
-        )
-
-        print("Installing build constraints...")
-        _run(
-            [str(pip), "install", "-r", str(constraints)],
-            cwd=build_cwd,
-            windows_paths=windows_paths,
-            log_file=log_file,
-        )
-
-        print("Installing project (non-editable from staging)...")
-        _run([str(pip), "install", "."], cwd=build_cwd, windows_paths=windows_paths, log_file=log_file)
-
-        print("Running PyInstaller...")
-        pyi_log = paths["dist"] / "pyinstaller.log"
-        _run(
-            [
-                str(pyinstaller),
-                "packaging/askabr_l_gui.spec",
-                "--noconfirm",
-                "--clean",
-                "--distpath",
-                str(paths["pyi_dist"]),
-                "--workpath",
-                str(paths["pyi_work"]),
-                "--log-file",
-                str(pyi_log),
-            ],
-            cwd=build_cwd,
-            windows_paths=windows_paths,
-            log_file=log_file,
-        )
-
-        try:
-            windows_paths.copy_built_exe(paths["pyi_dist"], dist_exe)
-        except FileNotFoundError as exc:
-            raise SystemExit(str(exc)) from exc
-
-        size_mb = round(dist_exe.stat().st_size / (1024 * 1024), 1)
-        if size_mb < MIN_EXE_MB:
-            raise SystemExit(
-                f"ASKABR-L.exe is only {size_mb} MB — expected at least {MIN_EXE_MB} MB. "
-                f"See {paths['build_log']} and {pyi_log}"
-            )
-
-        if not args.skip_smoke:
-            _run_smoke(dist_exe, paths["smoke_log"], debug=args.debug)
-
-        print()
-        print(f"Done. Output: {dist_exe.resolve()} ({size_mb} MB)")
-        print(f"Build log: {paths['build_log'].resolve()}")
-        if not args.skip_smoke:
-            print(f"Smoke log: {paths['smoke_log'].resolve()}")
-        print("Copy docs\\INSTRUKCIYA.txt next to the exe for end users.")
+    raise SystemExit(exit_code)
 
 
 if __name__ == "__main__":

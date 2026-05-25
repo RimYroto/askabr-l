@@ -39,7 +39,8 @@ def main() -> None:
     print(f"ASCII build cache: {cache}")
     print(f"Staging will be: {cache / 'staging'}")
     print(f"Final exe: {ROOT / 'dist' / 'ASKABR-L.exe'}")
-    print(f"Build log: {ROOT / 'dist' / 'build.log'}")
+    print(f"Build log (after build): {ROOT / 'dist' / 'build.log'}")
+    print(f"ASCII cache log: {cache / 'build.log'}")
 
     resolve = _load(ROOT / "packaging" / "resolve_python314.py", "resolve_python314")
     py314 = resolve.resolve_python314_executable()

@@ -117,8 +117,12 @@ def prepare_build_paths(project_root: Path) -> dict[str, Path]:
         "pyi_work": cache / "pyi-work",
         "pyi_dist": cache / "pyi-dist",
         "dist": project_root / "dist",
-        "build_log": project_root / "dist" / "build.log",
-        "smoke_log": project_root / "dist" / "smoke.log",
+        "build_log": cache / "build.log",
+        "pyinstaller_log": cache / "pyinstaller.log",
+        "smoke_log": cache / "smoke.log",
+        "dist_build_log": project_root / "dist" / "build.log",
+        "dist_smoke_log": project_root / "dist" / "smoke.log",
+        "dist_pyinstaller_log": project_root / "dist" / "pyinstaller.log",
     }
 
     for key in ("cache", "venv", "temp", "pyi_work", "pyi_dist", "dist"):
@@ -143,6 +147,19 @@ def prepare_build_paths(project_root: Path) -> dict[str, Path]:
         )
 
     return paths
+
+
+def publish_build_logs(paths: dict[str, Path]) -> None:
+    """Копирует логи из ASCII cache в dist проекта (удобно найти после сборки)."""
+    paths["dist"].mkdir(parents=True, exist_ok=True)
+    for cache_key, dist_key in (
+        ("build_log", "dist_build_log"),
+        ("pyinstaller_log", "dist_pyinstaller_log"),
+        ("smoke_log", "dist_smoke_log"),
+    ):
+        src = paths[cache_key]
+        if src.is_file():
+            shutil.copy2(src, paths[dist_key])
 
 
 def copy_built_exe(pyi_dist: Path, target: Path) -> Path:
