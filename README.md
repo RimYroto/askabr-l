@@ -5,6 +5,8 @@
 
 ## Установка
 
+Requires **Python 3.14** (see `.python-version`).
+
 ```bash
 uv sync          # рекомендуется: полное окружение разработки
 uv run askabr-gui
@@ -51,9 +53,12 @@ uv run askabr-gui
 
 ### Сборка ASKABR-L.exe (только Windows)
 
-```powershell
-.\packaging\build_windows.ps1
+```cmd
+packaging\build_windows.cmd
 ```
+
+Or in PowerShell: `.\packaging\build_windows.ps1` (also `packaging\build_windows.bat`).
+Requires **Python 3.14** on the build machine (`py -3.14 --version`).
 
 Результат: `dist\ASKABR-L.exe` — см. раздел 5 в `docs/INSTRUKCIYA.txt`.
 

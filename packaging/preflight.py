@@ -3,12 +3,13 @@
 
 from __future__ import annotations
 
+import argparse
 import sys
 from pathlib import Path
 
 WEIGHT_FILENAMES = ("model_v1.0.0.pt", "best.pt")
 REQUIRED_VARIANTS = ("tomato", "pear")
-MIN_PYTHON = (3, 10)
+REQUIRED_PYTHON = (3, 14)
 MAX_PYTHON_EXCLUSIVE = (3, 15)
 
 
@@ -41,21 +42,38 @@ def assert_release_models(root: Path) -> None:
     )
 
 
-def assert_python_version() -> None:
-    version = sys.version_info[:3]
-    if version[:2] < MIN_PYTHON or version >= MAX_PYTHON_EXCLUSIVE:
-        max_supported = f"{MAX_PYTHON_EXCLUSIVE[0]}.{MAX_PYTHON_EXCLUSIVE[1] - 1}"
+def assert_python_version(*, build: bool = False) -> None:
+    version = sys.version_info[:2]
+    if build:
+        if version != REQUIRED_PYTHON:
+            raise SystemExit(
+                f"Windows build requires Python {REQUIRED_PYTHON[0]}.{REQUIRED_PYTHON[1]}, "
+                f"but got {version[0]}.{version[1]}.\n"
+                "Install Python 3.14 and run: py -3.14 packaging\\build_windows.py"
+            )
+        return
+
+    if version < REQUIRED_PYTHON or version >= MAX_PYTHON_EXCLUSIVE:
         raise SystemExit(
-            f"Unsupported Python {version[0]}.{version[1]} for this project. "
-            f"Use Python {MIN_PYTHON[0]}.{MIN_PYTHON[1]}–{max_supported}."
+            f"Unsupported Python {version[0]}.{version[1]}. "
+            f"This project requires Python {REQUIRED_PYTHON[0]}.{REQUIRED_PYTHON[1]}."
         )
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(description="ASKABR-L build preflight checks.")
+    parser.add_argument(
+        "--build",
+        action="store_true",
+        help="Strict checks for Windows .exe build (Python 3.14 only).",
+    )
+    args = parser.parse_args()
+
     root = Path(__file__).resolve().parents[1]
-    assert_python_version()
+    assert_python_version(build=args.build)
     assert_release_models(root)
-    print("Build preflight OK:", root)
+    label = "Build preflight" if args.build else "Preflight"
+    print(f"{label} OK ({sys.version_info.major}.{sys.version_info.minor}):", root)
 
 
 if __name__ == "__main__":

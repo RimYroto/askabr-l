@@ -91,21 +91,21 @@
 
   - Windows 10/11 (64-bit)
   - Папка проекта целиком (вместе с подпапкой models/, где лежат файлы моделей)
-  - Python 3.10–3.14
+  - Python 3.14
   - Менеджер пакетов uv (рекомендуется) или pip
 
 2.2. Установка Python
 
   1. Откройте https://www.python.org/downloads/
-  2. Скачайте установщик Python 3.10–3.14 для Windows.
+  2. Скачайте установщик Python 3.14 для Windows.
   3. При установке обязательно отметьте галочку «Add python.exe to PATH».
   4. Завершите установку.
 
   Проверка в командной строке (Win+R -> cmd -> Enter):
 
-    python --version
+    py -3.14 --version
 
-  Должно появиться что-то вроде Python 3.12.x.
+  Должно появиться Python 3.14.x. Команда py -3.14 предпочтительна при сборке .exe.
 
 2.3. Установка uv (рекомендуется)
 
@@ -160,7 +160,7 @@
 
   - macOS 12 (Monterey) или новее
   - Папка проекта с подпапкой models/
-  - Python 3.10+ и uv
+  - Python 3.14 и uv
 
 3.2. Установка uv
 
@@ -192,7 +192,7 @@
 
   - Ubuntu 22.04+ или аналогичный дистрибутив (64-bit)
   - Папка проекта с подпапкой models/
-  - Python 3.10+ и uv
+  - Python 3.14 и uv
 
 4.2. Системные библиотеки для GUI
 
@@ -226,20 +226,23 @@
 5.1. Что понадобится
 
   - Windows 10/11 x64
-  - Python 3.10–3.14 (https://www.python.org/downloads/), с галочкой Add to PATH
+  - Python 3.14 (https://www.python.org/downloads/), с галочкой Add to PATH
   - Папка проекта с моделями в models/tomato/ и models/pear/
     (файлы best.pt или model_v1.0.0.pt)
 
 5.2. Сборка одной командой
 
-  1. Откройте PowerShell.
+  1. Откройте cmd или PowerShell.
   2. Перейдите в папку проекта:
 
     cd C:\путь\к\askabr-l
 
-  3. Запустите скрипт сборки:
+  3. Запустите сборку (любой способ):
 
+    packaging\build_windows.cmd
+    packaging\build_windows.bat
     .\packaging\build_windows.ps1
+    py -3.14 packaging\build_windows.py
 
   Скрипт автоматически:
   - создаст временное окружение .venv-build;
@@ -257,12 +260,23 @@
   Скопируйте ASKABR-L.exe на целевой компьютер — больше ничего устанавливать
   не нужно. Рекомендуется положить рядом файл INSTRUKCIYA.txt.
 
-5.4. Если PowerShell блокирует скрипт
+5.4. Сборка из cmd или PowerShell
 
-    Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+  Командная строка (cmd):
+
+    cd C:\путь\к\askabr-l
+    packaging\build_windows.cmd
+
+  PowerShell:
+
+    cd C:\путь\к\askabr-l
     .\packaging\build_windows.ps1
 
-  Или запустите двойным щелчком файл packaging\build_windows.bat.
+  Если PowerShell блокирует .ps1:
+
+    Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+
+  Или двойной щелчок по packaging\build_windows.bat (вызывает .cmd).
 
 ================================================================================
 6. ПРОВЕРКА УСТАНОВКИ
@@ -396,8 +410,9 @@
 
   GUI не открывается на Linux           Установите библиотеки Qt (раздел 4.2)
 
-  Ошибка при сборке .exe                Python 3.10–3.14, модели в models/,
-                                        затем packaging\build_windows.ps1
+  Ошибка при сборке .exe                Python 3.14 (py -3.14 --version),
+                                        модели в models/, затем
+                                        packaging\build_windows.cmd
 
 ================================================================================
 10. КРАТКАЯ ШПАРГАЛКА
@@ -409,6 +424,6 @@
   Установка из исходников             uv sync в папке проекта
   Запуск из исходников                uv run askabr-gui
   Инструкция в программе              Справка -> Инструкция
-  Сборка .exe (Windows)               .\packaging\build_windows.ps1
+  Сборка .exe (Windows)               packaging\build_windows.cmd
 
 ================================================================================
