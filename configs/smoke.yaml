@@ -1,0 +1,54 @@
+# Дымовой тест на синтетике (tools/download_data.py --tiny)
+data_root: "data/tiny_plant"
+artifacts_dir: "artifacts"
+train_ratio: 0.8
+seed: 42
+
+model:
+  backbone: "resnet18"
+  pretrained: true
+  num_classes: null
+
+train:
+  image_size: 128
+  batch_size: 8
+  epochs: 2
+  lr: 0.001
+  weight_decay: 0.0001
+  num_workers: 0
+  prefetch_factor: 2
+  no_tqdm: true
+  amp: false
+  amp_mps: false
+  torch_compile: false
+  strong_augment: true
+  label_smoothing: 0.0
+  use_class_weights: false
+  scheduler: "none"
+
+download:
+  kaggle_dataset: "abdallahalidev/plantvillage-dataset-ori"
+
+resistance:
+  severity_rules:
+    - pattern: "healthy"
+      weight: 0.0
+    - pattern: "scab"
+      weight: 0.65
+    - pattern: "rust"
+      weight: 0.75
+    - pattern: "mildew"
+      weight: 0.7
+    - pattern: "blight"
+      weight: 0.85
+    - pattern: "rot"
+      weight: 0.8
+    - pattern: "spot"
+      weight: 0.55
+    - pattern: "curl"
+      weight: 0.5
+    - pattern: "mosaic"
+      weight: 0.8
+    - pattern: "___"
+      weight: 0.6
+  default_severity_weight: 0.65

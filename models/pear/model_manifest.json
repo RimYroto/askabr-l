@@ -1,0 +1,13 @@
+{
+  "product": "ASKABR-L",
+  "version": "1.0.0",
+  "variant_id": "pear",
+  "display_name_ru": "Груша",
+  "backbone": "resnet50",
+  "num_classes": 4,
+  "checkpoint_file": "model_v1.0.0.pt",
+  "holdout_macro_f1": 0.824946,
+  "holdout_accuracy": 0.866197,
+  "trained_on": "Pear leaves",
+  "class_ids": ["curl", "healthy", "slug", "spot"]
+}

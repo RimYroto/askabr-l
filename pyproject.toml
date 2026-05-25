@@ -1,0 +1,93 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "askabr"
+version = "1.0.0"
+description = "АСКАБР-Л — автоматизированная система компьютерного анализа болезней растений по изображениям листьев"
+readme = "README.md"
+requires-python = ">=3.10,<3.14"
+license = { text = "Proprietary" }
+authors = [
+  { name = "Забабурин Владислав Игоревич", email = "zvi2026@gmail.com" },
+]
+keywords = [
+  "plant-disease",
+  "computer-vision",
+  "pytorch",
+  "agriculture",
+  "phytopathology",
+]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Science/Research",
+  "Natural Language :: Russian",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Topic :: Scientific/Engineering :: Image Recognition",
+]
+dependencies = [
+  "torch>=2.1.0",
+  "torchvision>=0.16.0",
+  "PyYAML>=6.0.1",
+  "Pillow>=10.0.0",
+  "numpy>=1.24.0",
+  "PyQt6>=6.6.0",
+]
+
+[project.optional-dependencies]
+train = [
+  "tqdm>=4.66.0",
+  "scikit-learn>=1.3.0",
+  "kagglehub>=0.3.0",
+]
+demo = [
+  "gradio>=4.44.0",
+]
+packaging = [
+  "pyinstaller>=6.0.0",
+]
+dev = [
+  "pytest>=7.4.0",
+]
+
+[project.scripts]
+askabr-gui = "gui.run_app:main"
+askabr-train = "askabr.training.train:main"
+askabr-eval = "tools.eval_holdout:main"
+
+[dependency-groups]
+dev = [
+  "pytest>=7.4.0",
+]
+train = [
+  "tqdm>=4.66.0",
+  "scikit-learn>=1.3.0",
+  "kagglehub>=0.3.0",
+]
+demo = [
+  "gradio>=4.44.0",
+]
+packaging = [
+  "pyinstaller>=6.0.0",
+]
+
+[tool.uv]
+default-groups = ["dev", "train", "demo"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["askabr*", "gui*", "tools*"]
+
+[tool.setuptools.package-data]
+gui = ["*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

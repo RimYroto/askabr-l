@@ -1,0 +1,21 @@
+{
+  "curl": "Груша — деформация листьев (скручивание)",
+  "healthy": "Груша — здоровый лист",
+  "slug": "Груша — повреждение листьев моллюсками",
+  "spot": "Груша — пятнистость листьев",
+  "Pepper__bell___Bacterial_spot": "Перец сладкий — бактериальная пятнистость",
+  "Pepper__bell___healthy": "Перец сладкий — здоровый лист",
+  "Potato___Early_blight": "Картофель — ранняя макроспориозная пятнистость",
+  "Potato___Late_blight": "Картофель — фитофтороз",
+  "Potato___healthy": "Картофель — здоровый лист",
+  "Tomato_Bacterial_spot": "Томат — бактериальная пятнистость",
+  "Tomato_Early_blight": "Томат — ранняя макроспориозная пятнистость",
+  "Tomato_Late_blight": "Томат — фитофтороз",
+  "Tomato_Leaf_Mold": "Томат — листовая плесень",
+  "Tomato_Septoria_leaf_spot": "Томат — септориоз",
+  "Tomato_Spider_mites_Two_spotted_spider_mite": "Томат — паутинный клещ",
+  "Tomato__Target_Spot": "Томат — целевая пятнистость",
+  "Tomato__Tomato_YellowLeaf__Curl_Virus": "Томат — вирус жёлтых и скрученных листьев",
+  "Tomato__Tomato_mosaic_virus": "Томат — мозаика",
+  "Tomato_healthy": "Томат — здоровый лист"
+}

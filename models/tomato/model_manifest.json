@@ -1,0 +1,24 @@
+{
+  "product": "ASKABR-L",
+  "version": "1.0.0",
+  "variant_id": "tomato",
+  "display_name_ru": "Томат",
+  "backbone": "resnet50",
+  "num_classes": 10,
+  "checkpoint_file": "model_v1.0.0.pt",
+  "holdout_macro_f1": 0.998027,
+  "holdout_accuracy": 0.998078,
+  "trained_on": "PlantVillage (подмножество Tomato)",
+  "class_ids": [
+    "Tomato_Bacterial_spot",
+    "Tomato_Early_blight",
+    "Tomato_Late_blight",
+    "Tomato_Leaf_Mold",
+    "Tomato_Septoria_leaf_spot",
+    "Tomato_Spider_mites_Two_spotted_spider_mite",
+    "Tomato__Target_Spot",
+    "Tomato__Tomato_YellowLeaf__Curl_Virus",
+    "Tomato__Tomato_mosaic_virus",
+    "Tomato_healthy"
+  ]
+}

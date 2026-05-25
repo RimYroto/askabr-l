@@ -1,0 +1,63 @@
+# Локальное обучение после: tools/split_dataset.py --clean
+paths:
+  train_root: "data/split/train"
+  val_root: "data/split/val"
+  holdout_root: "data/split/holdout"
+
+artifacts_dir: "artifacts"
+seed: 42
+
+model:
+  backbone: "resnet50"
+  pretrained: true
+  num_classes: null
+
+train:
+  image_size: 224
+  batch_size: 32
+  epochs: 35
+  lr: 0.0003
+  weight_decay: 0.02
+  num_workers: 0
+  prefetch_factor: 4
+  no_tqdm: true
+  amp: true
+  amp_mps: true
+  torch_compile: false
+  strong_augment: true
+  label_smoothing: 0.08
+  use_class_weights: true
+  scheduler: "cosine"
+
+# Режим одного корня не используется при наличии paths.*
+data_root: "data/split/train"
+train_ratio: 0.85
+
+download:
+  kaggle_dataset: "abdallahalidev/plantvillage-dataset-ori"
+
+resistance:
+  severity_rules:
+    - pattern: "healthy"
+      weight: 0.0
+    - pattern: "scab"
+      weight: 0.65
+    - pattern: "rust"
+      weight: 0.75
+    - pattern: "mildew"
+      weight: 0.7
+    - pattern: "blight"
+      weight: 0.85
+    - pattern: "rot"
+      weight: 0.8
+    - pattern: "spot"
+      weight: 0.55
+    - pattern: "curl"
+      weight: 0.5
+    - pattern: "mosaic"
+      weight: 0.8
+    - pattern: "mite"
+      weight: 0.5
+    - pattern: "___"
+      weight: 0.6
+  default_severity_weight: 0.65

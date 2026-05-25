@@ -1,0 +1,57 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+*.egg
+
+# Virtual environments
+venv/
+.venv/
+.venv-build/
+env/
+
+# uv / build
+dist/
+build/
+*.spec.bak
+
+# Testing / typing / caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.cache/
+
+# Logs and OS
+*.log
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.cursor/
+
+# PyInstaller
+*.manifest
+
+# Training datasets (regenerate locally; see docs/INSTRUKCIYA.txt)
+data/*
+!data/.gitkeep
+
+# Model weights (large binaries; one canonical file per deployed variant)
+*.pt
+!models/tomato/model_v1.0.0.pt
+!models/pear/model_v1.0.0.pt
+
+# Training run checkpoints inside artifact dirs (metadata files are tracked)
+artifacts/*.pt
+artifacts_tomato/*.pt
+artifacts_pear/*.pt

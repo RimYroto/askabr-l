@@ -1,0 +1,14 @@
+{
+  "classes": [
+    "curl",
+    "healthy",
+    "slug",
+    "spot"
+  ],
+  "idx_to_class": {
+    "0": "curl",
+    "1": "healthy",
+    "2": "slug",
+    "3": "spot"
+  }
+}

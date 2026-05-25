@@ -1,0 +1,10 @@
+{
+  "product": "ASKABR-L",
+  "version": "1.0.0",
+  "variant_id": "multicrop",
+  "display_name_ru": "Мультикультурная модель (томат, перец, картофель)",
+  "backbone": "resnet50",
+  "checkpoint_file": "model_v1.0.0.pt",
+  "trained_on": "PlantVillage (мультикультурное подмножество)",
+  "note": "Разверните веса после обучения configs/plantvillage_local.yaml"
+}

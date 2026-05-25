@@ -1,0 +1,14 @@
+# АСКАБР-Л — зависимости (сгенерировано uv, не редактировать вручную)
+#
+# Рекомендуемый способ установки:
+#   uv sync
+#
+# Альтернатива через pip:
+#   pip install -r requirements.txt              # только GUI и инференс
+#   pip install -r requirements-train.txt        # + обучение и Gradio-демо
+#   pip install -r requirements-dev.txt          # полное окружение разработки (как uv sync)
+#
+# Обновление после изменения pyproject.toml:
+#   uv lock && uv export --format requirements-txt --no-dev --no-default-groups --no-emit-project -o requirements.txt
+#   uv export --format requirements-txt --no-dev --no-default-groups --no-emit-project --extra train --extra demo -o requirements-train.txt
+#   uv export --format requirements-txt --no-emit-project --group dev --group train --group demo -o requirements-dev.txt
