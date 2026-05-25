@@ -10,7 +10,6 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-VENV_DIR = ROOT / ".venv-build"
 MIN_EXE_MB = 50
 
 
@@ -40,14 +39,20 @@ def _reexec_if_needed() -> Path:
     os.execv(str(target_path), [str(target_path), *sys.argv])
 
 
-def _run(cmd: list[str], *, cwd: Path = ROOT) -> None:
+def _run(cmd: list[str], *, cwd: Path, windows_paths) -> None:
     print("+", " ".join(cmd))
-    subprocess.run(cmd, cwd=cwd, check=True)
+    kwargs = {"cwd": cwd, "check": True}
+    if sys.platform == "win32":
+        kwargs.update(windows_paths.subprocess_text_kwargs())
+    subprocess.run(cmd, **kwargs)
 
 
 def main() -> None:
     if sys.platform != "win32":
         raise SystemExit("build_windows.py must be run on Windows 10/11 (64-bit).")
+
+    windows_paths = _load_module("windows_paths", ROOT / "packaging" / "windows_paths.py")
+    windows_paths.configure_unicode_env()
 
     python = _reexec_if_needed()
     preflight = _load_module("preflight", ROOT / "packaging" / "preflight.py")
@@ -56,19 +61,27 @@ def main() -> None:
     preflight.assert_python_version(build=True)
     preflight.assert_release_models(ROOT)
 
-    if VENV_DIR.exists():
-        print("Removing previous build venv...")
+    paths = windows_paths.prepare_build_paths(ROOT)
+    venv_dir = paths["venv"]
+    dist_exe = paths["dist"] / "ASKABR-L.exe"
+
+    if venv_dir.exists():
+        print(f"Removing previous build venv: {venv_dir}")
         import shutil
 
-        shutil.rmtree(VENV_DIR)
+        shutil.rmtree(venv_dir)
+    venv_dir.mkdir(parents=True, exist_ok=True)
+
+    print(f"Project: {paths['project']}")
+    print(f"Build cache (ASCII): {paths['cache']}")
 
     print("Creating build venv...")
-    _run([str(python), "-m", "venv", str(VENV_DIR)])
+    _run([str(python), "-m", "venv", str(venv_dir)], cwd=paths["project"], windows_paths=windows_paths)
 
-    pip = VENV_DIR / "Scripts" / "pip.exe"
-    pyinstaller = VENV_DIR / "Scripts" / "pyinstaller.exe"
+    pip = venv_dir / "Scripts" / "pip.exe"
+    pyinstaller = venv_dir / "Scripts" / "pyinstaller.exe"
 
-    _run([str(pip), "install", "-U", "pip", "wheel", "setuptools"])
+    _run([str(pip), "install", "-U", "pip", "wheel", "setuptools"], cwd=paths["project"], windows_paths=windows_paths)
     print("Installing PyTorch (CPU) for cp314...")
     _run(
         [
@@ -78,21 +91,49 @@ def main() -> None:
             "torchvision",
             "--index-url",
             "https://download.pytorch.org/whl/cpu",
-        ]
+        ],
+        cwd=paths["project"],
+        windows_paths=windows_paths,
     )
     print("Installing project and PyInstaller...")
-    _run([str(pip), "install", "pyinstaller>=6.10", "pyinstaller-hooks-contrib>=2025.4"])
-    _run([str(pip), "install", "-e", ".[packaging]", "--no-deps"])
-    _run([str(pip), "install", "PyYAML", "Pillow", "numpy", "PyQt6", "certifi"])
+    _run(
+        [str(pip), "install", "pyinstaller>=6.10", "pyinstaller-hooks-contrib>=2025.4"],
+        cwd=paths["project"],
+        windows_paths=windows_paths,
+    )
+    _run(
+        [str(pip), "install", "-e", ".[packaging]", "--no-deps"],
+        cwd=paths["project"],
+        windows_paths=windows_paths,
+    )
+    _run(
+        [str(pip), "install", "PyYAML", "Pillow", "numpy", "PyQt6", "certifi"],
+        cwd=paths["project"],
+        windows_paths=windows_paths,
+    )
 
     print("Running PyInstaller...")
-    _run([str(pyinstaller), "packaging/askabr_l_gui.spec", "--noconfirm", "--clean"])
+    _run(
+        [
+            str(pyinstaller),
+            "packaging/askabr_l_gui.spec",
+            "--noconfirm",
+            "--clean",
+            "--distpath",
+            str(paths["pyi_dist"]),
+            "--workpath",
+            str(paths["pyi_work"]),
+        ],
+        cwd=paths["project"],
+        windows_paths=windows_paths,
+    )
 
-    exe = ROOT / "dist" / "ASKABR-L.exe"
-    if not exe.is_file():
-        raise SystemExit(f"Build finished but {exe} was not created.")
+    try:
+        windows_paths.copy_built_exe(paths["pyi_dist"], dist_exe)
+    except FileNotFoundError as exc:
+        raise SystemExit(str(exc)) from exc
 
-    size_mb = round(exe.stat().st_size / (1024 * 1024), 1)
+    size_mb = round(dist_exe.stat().st_size / (1024 * 1024), 1)
     if size_mb < MIN_EXE_MB:
         raise SystemExit(
             f"ASKABR-L.exe is only {size_mb} MB — expected at least {MIN_EXE_MB} MB. "
@@ -100,7 +141,7 @@ def main() -> None:
         )
 
     print()
-    print(f"Done. Output: {exe} ({size_mb} MB)")
+    print(f"Done. Output: {dist_exe} ({size_mb} MB)")
     print("Copy docs\\INSTRUKCIYA.txt next to the exe for end users.")
 
 

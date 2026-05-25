@@ -11,9 +11,16 @@ REQUIRED_MAJOR = 3
 REQUIRED_MINOR = 14
 
 
+def _subprocess_run(*args, **kwargs):
+    if sys.platform == "win32":
+        kwargs.setdefault("encoding", "utf-8")
+        kwargs.setdefault("errors", "replace")
+    return subprocess.run(*args, **kwargs)
+
+
 def _version_tuple(executable: str) -> tuple[int, int] | None:
     try:
-        result = subprocess.run(
+        result = _subprocess_run(
             [executable, "-c", "import sys; print(sys.version_info[0], sys.version_info[1])"],
             capture_output=True,
             text=True,
@@ -35,7 +42,7 @@ def _version_tuple(executable: str) -> tuple[int, int] | None:
 
 def _executable_for_command(command: list[str]) -> str | None:
     try:
-        result = subprocess.run(
+        result = _subprocess_run(
             [*command, "-c", "import sys; print(sys.executable)"],
             capture_output=True,
             text=True,
