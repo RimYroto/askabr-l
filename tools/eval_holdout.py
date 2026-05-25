@@ -60,7 +60,9 @@ def main() -> None:
 
     device = pick_device()
     num_classes = len(ds.classes)
-    model = build_model(cfg["model"]["backbone"], bool(cfg["model"]["pretrained"]), num_classes).to(device)
+    model = build_model(cfg["model"]["backbone"], pretrained=False, num_classes=num_classes).to(
+        device
+    )
     model.load_state_dict(torch.load(args.checkpoint, map_location=device))
     model.eval()
 

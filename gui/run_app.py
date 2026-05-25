@@ -8,6 +8,10 @@ import argparse
 import sys
 from pathlib import Path
 
+from askabr.core.ssl import configure_ssl_certificates
+
+configure_ssl_certificates()
+
 from PyQt6.QtWidgets import QApplication
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]

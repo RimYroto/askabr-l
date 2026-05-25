@@ -55,11 +55,10 @@ def load_artifacts(
 
     classes, _ = load_label_map(checkpoint_path.parent / "labels.json")
     num_classes = len(classes)
-    model = build_model(
-        cfg["model"]["backbone"],
-        bool(cfg["model"]["pretrained"]),
-        num_classes,
-    ).to(device)
+    # Веса берутся из checkpoint; ImageNet по сети не нужен (на Windows часто падает SSL).
+    model = build_model(cfg["model"]["backbone"], pretrained=False, num_classes=num_classes).to(
+        device
+    )
     state = torch.load(checkpoint_path, map_location=device, weights_only=True)
     model.load_state_dict(state)
     model.eval()

@@ -12,6 +12,7 @@ from sklearn.metrics import f1_score
 from tqdm import tqdm
 
 from askabr.classification.model import build_model
+from askabr.core.ssl import configure_ssl_certificates
 from askabr.core.constants import (
     EARLY_STOP_MIN_MACRO_F1,
     EARLY_STOP_PLATEAU_EPOCHS,
@@ -97,6 +98,7 @@ def evaluate(
 
 
 def main() -> None:
+    configure_ssl_certificates()
     parser = argparse.ArgumentParser(description="Обучение классификатора болезней растений (АСКАБР-Л).")
     parser.add_argument("--config", type=Path, default=project_root() / "configs" / "default.yaml")
     args = parser.parse_args()

@@ -382,6 +382,12 @@
 
   E005 — ошибка классификации           Другое изображение или перезапуск
 
+  E005 с текстом certificate_verify_   Обновите проект (исправлено в новых
+  failed / SSL                          версиях) или выполните:
+                                        uv sync
+                                        uv run askabr-gui
+                                        При обучении: pip install certifi
+
   uv: command not found                 Переустановите uv (раздел 2.3 или 3.2)
 
   python: command not found             Переустановите Python с Add to PATH
