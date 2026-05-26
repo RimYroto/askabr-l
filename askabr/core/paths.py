@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import os
-import sys
 from pathlib import Path
 
 from askabr.core.constants import DEFAULT_MODEL_FILENAME, LEGACY_MODEL_FILENAME
@@ -12,23 +11,13 @@ from askabr.core.errors import E006_DATASET_ROOT_MISSING, format_error
 
 
 def project_root() -> Path:
-    """Корень репозитория в разработке; корень bundle PyInstaller в frozen-сборке."""
-    if getattr(sys, "frozen", False):
-        return Path(sys._MEIPASS)
+    """Корень репозитория (папка, где лежат askabr/, gui/, models/)."""
     return Path(__file__).resolve().parents[2]
 
 
 def torch_cache_dir() -> Path:
     """Записываемый кэш весов torch hub."""
-    if getattr(sys, "frozen", False):
-        if sys.platform == "win32":
-            program_data = os.environ.get("ProgramData", r"C:\ProgramData")
-            cache = Path(program_data) / "ASKABR-L" / "torch"
-        else:
-            base = os.environ.get("LOCALAPPDATA") or os.environ.get("XDG_CACHE_HOME") or str(Path.home())
-            cache = Path(base) / "ASKABR-L" / "torch"
-    else:
-        cache = project_root() / ".cache" / "torch"
+    cache = project_root() / ".cache" / "torch"
     cache.mkdir(parents=True, exist_ok=True)
     return cache
 

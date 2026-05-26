@@ -11,13 +11,11 @@ __pycache__/
 # Virtual environments
 venv/
 .venv/
-.venv-build/
 env/
 
-# uv / build
+# Local build artifacts (if any)
 dist/
 build/
-*.spec.bak
 
 # Testing / typing / caches
 .pytest_cache/
@@ -38,9 +36,6 @@ Thumbs.db
 *.swp
 *.swo
 .cursor/
-
-# PyInstaller
-*.manifest
 
 # Training datasets (regenerate locally; see docs/INSTRUKCIYA.txt)
 data/*

@@ -3,69 +3,54 @@
 **Автоматизированная система компьютерного анализа болезней растений по изображениям листьев**  
 Версия **1.0.0**
 
-## Установка
+## Запуск (рекомендуется)
 
-Requires **Python 3.14** (see `.python-version`).
+Нужна папка проекта целиком (с `models/`, `askabr/`, `gui/`). Python ставить отдельно не обязательно — его подтянет **uv**.
 
-```bash
-uv sync          # рекомендуется: полное окружение разработки
+### Windows
+
+1. Установите [uv](https://docs.astral.sh/uv/getting-started/installation/) (в PowerShell одна команда — в [инструкции](docs/INSTRUKCIYA.txt), раздел 3.2).
+2. Откройте PowerShell, перейдите в каталог проекта: `cd <путь_к_каталогу_проекта>`
+3. Первый раз (10–25 мин, нужен интернет):
+
+```powershell
+uv sync
+```
+
+4. Запуск программы:
+
+```powershell
 uv run askabr-gui
 ```
 
-Без uv (только pip):
+### macOS / Linux
 
 ```bash
-pip install -r requirements.txt        # GUI и инференс
-pip install -r requirements-train.txt  # + обучение и демо
-pip install -r requirements-dev.txt    # как uv sync
-```
-
-Файлы `requirements*.txt` генерируются из `uv.lock` — см. комментарии в [`requirements.in`](requirements.in).
-
-## Документация
-
-Полная инструкция: **[docs/INSTRUKCIYA.txt](docs/INSTRUKCIYA.txt)**
-
-В программе: меню **Справка → Инструкция**.
-
----
-
-## Быстрый старт
-
-### Windows — готовая программа (без Python)
-
-1. Скопируйте `ASKABR-L.exe` и `INSTRUKCIYA.txt` в одну папку.
-2. Запустите `ASKABR-L.exe` двойным щелчком.
-3. При предупреждении Windows: **Подробнее** → **Выполнить**.
-
-Подробнее — в `docs/INSTRUKCIYA.txt`, раздел 1.
-
-### Установка из исходников (Windows / macOS / Linux)
-
-```bash
-# Установите uv: https://docs.astral.sh/uv/getting-started/installation/
-cd askabr-l
+curl -LsSf https://astral.sh/uv/install.sh | sh
+cd <каталог_проекта>
 uv sync
 uv run askabr-gui
 ```
 
-Пошагово для каждой ОС — в `docs/INSTRUKCIYA.txt` (разделы 2–4).
+Полная инструкция по установке и эксплуатации: **[docs/INSTRUKCIYA.txt](docs/INSTRUKCIYA.txt)**  
+В программе: меню **Справка → Инструкция**.
 
-### Сборка ASKABR-L.exe (только Windows)
+## Требования
 
-```cmd
-packaging\build_windows.cmd
+- **Python 3.14** (устанавливается автоматически через `uv sync`, см. `.python-version`)
+- Модели в `models/tomato/` и `models/pear/` (`model_v1.0.0.pt` или `best.pt`)
+- ~5–8 ГБ свободного места при первой установке
+
+## Альтернатива без uv
+
+```bash
+pip install -r requirements.txt        # GUI и инференс
+pip install -r requirements-train.txt  # + обучение и демо
+pip install -r requirements-dev.txt      # как uv sync
+askabr-gui
 ```
 
-Or in PowerShell: `.\packaging\build_windows.ps1` (also `packaging\build_windows.bat`).
-
-Requires **Python 3.14** (`py -3.14 --version`). Works with Cyrillic Windows usernames (build uses `C:\ProgramData\ASKABR-L\`).
-
-Output: `dist\ASKABR-L.exe` plus `dist\build.log` and `dist\smoke.log`. Debug build: `py -3.14 packaging\build_windows.py --debug`.
-
-See section 5 in `docs/INSTRUKCIYA.txt`.
-
----
+Файлы `requirements*.txt` генерируются из `uv.lock` — см. [requirements.in](requirements.in).
 
 ## Структура проекта
 

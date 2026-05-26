@@ -48,10 +48,6 @@ train = [
 demo = [
   "gradio>=4.44.0",
 ]
-packaging = [
-  "pyinstaller>=6.10.0",
-  "pyinstaller-hooks-contrib>=2025.4",
-]
 dev = [
   "pytest>=7.4.0",
 ]
@@ -72,10 +68,6 @@ train = [
 ]
 demo = [
   "gradio>=4.44.0",
-]
-packaging = [
-  "pyinstaller>=6.10.0",
-  "pyinstaller-hooks-contrib>=2025.4",
 ]
 
 [tool.uv]
